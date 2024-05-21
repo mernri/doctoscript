@@ -1,0 +1,18 @@
+# Ignorer les fichiers de configuration sensibles
+.env
+config.py
+
+# Ignorer les fichiers et dossiers générés par Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorer les environnements virtuels
+venv/
+.env/
+env/
+ENV/
+
+# Ignorer les fichiers de log
+*.log
+
