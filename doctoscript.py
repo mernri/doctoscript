@@ -133,15 +133,28 @@ def schedule_random_interval():
         config.tenon_fertilite
     )
 
+
+def generate_daily_schedule():
+    start_time = random.randint(7 * 60 + 25, 7 * 60 + 35)  # Between 7:25 and 7:35 in minutes
+    end_time = random.randint(21 * 60 + 25, 22 * 60 + 25)  # Between 21:25 and 21:35 in minutes
+    start_hour, start_minute = divmod(start_time, 60)
+    end_hour, end_minute = divmod(end_time, 60)
+    return (start_hour, start_minute), (end_hour, end_minute)
+
+
 def run_scheduler():
     schedule_random_interval()  # Schedule the first check
     
-      # Planifier l'envoi du message quotidien à midi
-    schedule.every().day.at("12:10").do(send_daily_message)
+    # Planifier l'envoi du message quotidien à midi
+    schedule.every().day.at("12:00").do(send_daily_message)
     
     while True:
-        current_time = time.localtime()
-        if 8 <= current_time.tm_hour < 21:
+        current_time = datetime.now()
+        (start_hour, start_minute), (end_hour, end_minute) = generate_daily_schedule()
+        start_time = current_time.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0)
+        end_time = current_time.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+        
+        if start_time <= current_time <= end_time:
             schedule.run_pending()
         time.sleep(1)
 
