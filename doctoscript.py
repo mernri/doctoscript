@@ -130,11 +130,11 @@ def schedule_random_interval():
     schedule.clear()  # Clear the current schedule
     schedule.every(random_interval).seconds.do(
         check_availabilities,
-        config.feyeux
+        config.tenon_fertilite
     )
 
 def run_scheduler():
-    # schedule_random_interval()  # Schedule the first check
+    schedule_random_interval()  # Schedule the first check
     
       # Planifier l'envoi du message quotidien à midi
     schedule.every().day.at("12:10").do(send_daily_message)
