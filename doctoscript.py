@@ -33,24 +33,33 @@ def check_availabilities(practicien):
             )
 
             utils.send_whatsapp_message(message)
-            print("\nMessage envoyé : {message}")
+            print(
+                f"\n                                          \033[92mRDV AVEC {practicien['name']} DISPO le : . Message envoyé..\033[0m")
+
         else:
             print(
-                f"\nPas de rendez-vous libre pour le moment pour {practicien['name']}.")
+                f"\n                                          Pas de rendez-vous libre pour le moment pour {practicien['name']}.")
     else:
         print(
-            f"\nErreur lors de la récupération des disponibilités : {response.status_code} - {response.text}")
+            f"\n                                          \033[92mErreur lors de la récupération des disponibilités[0m")
 
     # Planifier la prochaine vérification après l'intervalle aléatoire
     schedule_random_interval(practicien)
 
 
 def schedule_random_interval(practicien):
-    min_interval = 8  # 8 minutes in seconds
-    max_interval = 12  # 12 minutes in seconds
+    min_interval = 8*60  # 8 minutes in seconds
+    max_interval = 12*60  # 12 minutes in seconds
     random_interval = random.randint(min_interval, max_interval)
-    current_time = datetime.now().strftime("[%d.%m.%Y - %Hh%M]")
-    print(f"\n{current_time} - Next check scheduled in {random_interval // 60} minutes and {random_interval % 60} seconds.")
+    current_time = datetime.now().strftime("%d.%m.%Y - %Hh%Mm%Ss")
+
+    bold = "\033[1m"
+    reset = "\033[0m"
+    highlight_magenta = "\033[45m\033[97m"
+    highlight_violet = "\033[48;5;93m\033[97m"
+
+    print(
+        f"\n{highlight_magenta} {practicien['name']} {reset}{highlight_violet} {current_time} {reset}{bold} Next check scheduled in {random_interval // 60} minutes and {random_interval % 60} seconds.{reset}")
     schedule.clear()  # Clear the current schedule
     schedule.every(random_interval).seconds.do(
         check_availabilities,

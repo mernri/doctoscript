@@ -30,9 +30,7 @@ def send_whatsapp_message(message):
 
     response = requests.post(url, headers=headers, data=json.dumps(payload))
 
-    if response.status_code == 200:
-        print("\nMessage WhatsApp envoyé avec succès.")
-    else:
+    if response.status_code != 200:
         print(
             f"\nErreur lors de l'envoi du message WhatsApp: {response.status_code}, {response.text}")
 
