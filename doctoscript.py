@@ -3,89 +3,10 @@ import schedule
 import time
 import random
 from datetime import datetime
-from dotenv import load_dotenv
-import os
 import config
-import json
+import sys
+import utils
 
-# Charger les variables d'environnement depuis le fichier .env
-load_dotenv()
-
-# Configuration WhatsApp API depuis les variables d'environnement
-WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
-META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN")
-RECIPIENT_PHONE_NUMBER = os.getenv("RECIPIENT_PHONE_NUMBER")
-WHATSAPP_API_VERSION = os.getenv("WHATSAPP_API_VERSION", "v19.0")
-
-def send_whatsapp_message(message):
-    url = f"https://graph.facebook.com/{WHATSAPP_API_VERSION}/{WHATSAPP_PHONE_NUMBER_ID}/messages"
-    headers = {
-        "Content-type": "application/json",
-        "Authorization": f"Bearer {META_ACCESS_TOKEN}",
-    }
-    payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": RECIPIENT_PHONE_NUMBER,
-        "type": "text",
-        "text": {"preview_url": False, "body": message[:4096]}
-    }
-    
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
-    
-    if response.status_code == 200:
-        print("\nMessage WhatsApp envoyé avec succès.")
-    else:
-        print(f"\nErreur lors de l'envoi du message WhatsApp: {response.status_code}, {response.text}")
-
-
-def send_interactive_message(body_text, button_id, button_title):
-    url = f"https://graph.facebook.com/{WHATSAPP_API_VERSION}/{WHATSAPP_PHONE_NUMBER_ID}/messages"
-    headers = {
-        "Content-type": "application/json",
-        "Authorization": f"Bearer {META_ACCESS_TOKEN}",
-    }
-    interactive_message_payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": RECIPIENT_PHONE_NUMBER,
-        "type": "interactive",
-        "interactive": {
-            "type": "button",
-            "body": {
-                "text": body_text[:1024]  # Max 1024 characters - Whatsapp API
-            },
-            "action": {
-                "buttons": [
-                    {
-                        "type": "reply",
-                        "reply": {
-                            "id": button_id,
-                            # Max 20 characters - Whatsapp API
-                            "title": button_title[:20]
-                        }
-                    }
-                ]
-            }
-        }
-    }
-
-    response = requests.post(url, headers=headers, data=json.dumps(interactive_message_payload))
-    
-    if response.status_code == 200:
-        print("\nReminder message envoyé avec succès.")
-    else:
-        print(f"\nErreur lors de l'envoi du reminder message WhatsApp: {response.status_code}, {response.text}")
-
-
-def send_daily_message():
-    message = "Ceci est un message de rappel."
-    send_interactive_message(message, "ok", "C'est noté")
-
-
-def format_datetime(datetime_str):
-    date_time_obj = datetime.fromisoformat(datetime_str[:-6])
-    return date_time_obj.strftime("%d %B %Y à %Hh%M")
 
 def check_availabilities(practicien):
     url = "https://www.doctolib.fr/availabilities.json"
@@ -100,63 +21,82 @@ def check_availabilities(practicien):
         "Connection": "keep-alive",
     }
     response = requests.get(url, params=params, headers=headers)
-        
+
     if response.status_code == 200:
         data = response.json()
         if "next_slot" in data:
-            next_slot = format_datetime(data["next_slot"])
+            next_slot = utils.format_datetime(data["next_slot"])
             message = (
                 f"Il y a au moins un rendez-vous libre pour *{practicien['name']}*.\n\n"
                 f"Prochain créneau disponible : \n{next_slot}.\n\n"
                 f"Réservez ici : {practicien['booking_url']}"
             )
-            
-            send_whatsapp_message(message)
+
+            utils.send_whatsapp_message(message)
             print("\nMessage envoyé : {message}")
         else:
-            print(f"\nPas de rendez-vous libre pour le moment pour {practicien['name']}.")
+            print(
+                f"\nPas de rendez-vous libre pour le moment pour {practicien['name']}.")
     else:
-        print(f"\nErreur lors de la récupération des disponibilités : {response.status_code} - {response.text}")
-    
-    # Planifier la prochaine vérification après l'intervalle aléatoire
-    schedule_random_interval()
+        print(
+            f"\nErreur lors de la récupération des disponibilités : {response.status_code} - {response.text}")
 
-def schedule_random_interval():
-    min_interval = 8*60 # 8 minutes in seconds
-    max_interval = 12*60 # 12 minutes in seconds
+    # Planifier la prochaine vérification après l'intervalle aléatoire
+    schedule_random_interval(practicien)
+
+
+def schedule_random_interval(practicien):
+    min_interval = 8  # 8 minutes in seconds
+    max_interval = 12  # 12 minutes in seconds
     random_interval = random.randint(min_interval, max_interval)
     current_time = datetime.now().strftime("[%d.%m.%Y - %Hh%M]")
     print(f"\n{current_time} - Next check scheduled in {random_interval // 60} minutes and {random_interval % 60} seconds.")
     schedule.clear()  # Clear the current schedule
     schedule.every(random_interval).seconds.do(
         check_availabilities,
-        config.tenon_fertilite
+        practicien
     )
 
 
 def generate_daily_schedule():
-    start_time = random.randint(7 * 60 + 25, 7 * 60 + 35)  # Between 7:25 and 7:35 in minutes
-    end_time = random.randint(21 * 60 + 25, 22 * 60 + 25)  # Between 21:25 and 21:35 in minutes
+    # Between 7:25 and 7:35 in minutes
+    start_time = random.randint(7 * 60 + 25, 7 * 60 + 35)
+    # Between 21:25 and 21:35 in minutes
+    end_time = random.randint(21 * 60 + 25, 22 * 60 + 25)
     start_hour, start_minute = divmod(start_time, 60)
     end_hour, end_minute = divmod(end_time, 60)
     return (start_hour, start_minute), (end_hour, end_minute)
 
 
-def run_scheduler():
-    schedule_random_interval()  # Schedule the first check
-    
+def run_scheduler(practicien):
+    schedule_random_interval(practicien)  # Schedule the first check
+
     # Planifier l'envoi du message quotidien à midi
-    schedule.every().day.at("12:00").do(send_daily_message)
-    
+    schedule.every().day.at("12:00").do(utils.send_daily_message)
+
     while True:
         current_time = datetime.now()
-        (start_hour, start_minute), (end_hour, end_minute) = generate_daily_schedule()
-        start_time = current_time.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0)
-        end_time = current_time.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
-        
+        (start_hour, start_minute), (end_hour,
+                                     end_minute) = generate_daily_schedule()
+        start_time = current_time.replace(
+            hour=start_hour, minute=start_minute, second=0, microsecond=0)
+        end_time = current_time.replace(
+            hour=end_hour, minute=end_minute, second=0, microsecond=0)
+
         if start_time <= current_time <= end_time:
             schedule.run_pending()
         time.sleep(1)
 
+
 if __name__ == "__main__":
-    run_scheduler()
+    if len(sys.argv) != 2:
+        print("Missing practicien name: python doctoscript.py <practicien_name>")
+        sys.exit(1)
+
+    practicien_name = sys.argv[1]
+    if not hasattr(config, practicien_name):
+        print(f"Practicien '{practicien_name}' non trouvé dans config.py")
+        sys.exit(1)
+
+    practicien = getattr(config, practicien_name)
+    run_scheduler(practicien)
