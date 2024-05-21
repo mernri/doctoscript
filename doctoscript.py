@@ -114,7 +114,7 @@ def check_availabilities(practicien):
             send_whatsapp_message(message)
             print("\nMessage envoyé : {message}")
         else:
-            print("\nPas de rendez-vous libre pour le moment.")
+            print(f"\nPas de rendez-vous libre pour le moment pour {practicien['name']}.")
     else:
         print(f"\nErreur lors de la récupération des disponibilités : {response.status_code} - {response.text}")
     
