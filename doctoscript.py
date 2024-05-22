@@ -41,15 +41,15 @@ def check_availabilities(practicien):
                 f"\n                                          Pas de rendez-vous libre pour le moment pour {practicien['name']}.")
     else:
         print(
-            f"\n                                          \033[92mErreur lors de la récupération des disponibilités[0m")
+            f"\n                                          \033[91mErreur lors de la récupération des disponibilités[0m")
 
     # Planifier la prochaine vérification après l'intervalle aléatoire
     schedule_random_interval(practicien)
 
 
 def schedule_random_interval(practicien):
-    min_interval = 8*60  # 8 minutes in seconds
-    max_interval = 12*60  # 12 minutes in seconds
+    min_interval = 5*60  # 5 minutes in seconds
+    max_interval = 8*60  # 8 minutes in seconds
     random_interval = random.randint(min_interval, max_interval)
     current_time = datetime.now().strftime("%d.%m.%Y - %Hh%Mm%Ss")
 
@@ -71,7 +71,7 @@ def generate_daily_schedule():
     # Between 7:25 and 7:35 in minutes
     start_time = random.randint(7 * 60 + 25, 7 * 60 + 35)
     # Between 21:25 and 21:35 in minutes
-    end_time = random.randint(21 * 60 + 25, 22 * 60 + 25)
+    end_time = random.randint(21 * 60 + 25, 23 * 60 + 25)
     start_hour, start_minute = divmod(start_time, 60)
     end_hour, end_minute = divmod(end_time, 60)
     return (start_hour, start_minute), (end_hour, end_minute)
