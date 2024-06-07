@@ -4,10 +4,8 @@ import os
 import json
 from datetime import datetime
 
-# Charger les variables d'environnement depuis le fichier .env
-load_dotenv()
-
 # Configuration WhatsApp API depuis les variables d'environnement
+load_dotenv()
 WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
 META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN")
 RECIPIENT_PHONE_NUMBER = os.getenv("RECIPIENT_PHONE_NUMBER")

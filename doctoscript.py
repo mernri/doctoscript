@@ -8,10 +8,10 @@ import sys
 import utils
 
 
-def check_availabilities(practicien):
+def check_availabilities(practitioner):
     url = "https://www.doctolib.fr/availabilities.json"
     start_date = datetime.now().strftime("%Y-%m-%d")
-    params = practicien["params"].copy()
+    params = practitioner["params"].copy()
     params["start_date"] = start_date
 
     headers = {
@@ -27,29 +27,29 @@ def check_availabilities(practicien):
         if "next_slot" in data:
             next_slot = utils.format_datetime(data["next_slot"])
             message = (
-                f"Il y a au moins un rendez-vous libre pour *{practicien['name']}*.\n\n"
+                f"Il y a au moins un rendez-vous libre pour *{practitioner['name']}*.\n\n"
                 f"Prochain créneau disponible : \n{next_slot}.\n\n"
-                f"Réservez ici : {practicien['booking_url']}"
+                f"Réservez ici : {practitioner['booking_url']}"
             )
 
             utils.send_whatsapp_message(message)
             print(
-                f"\n                                          \033[92mRDV AVEC {practicien['name']} DISPO le : . Message envoyé..\033[0m")
+                f"\n                                          \033[92mRDV AVEC {practitioner['name']} DISPO le : . Message envoyé..\033[0m")
 
         else:
             print(
-                f"\n                                          Pas de rendez-vous libre pour le moment pour {practicien['name']}.")
+                f"\n                                          Pas de rendez-vous libre pour le moment pour {practitioner['name']}.")
     else:
         print(
             f"\n                                          \033[91mErreur lors de la récupération des disponibilités[0m")
 
     # Planifier la prochaine vérification après l'intervalle aléatoire
-    schedule_random_interval(practicien)
+    schedule_random_interval(practitioner)
 
 
-def schedule_random_interval(practicien):
-    min_interval = 5*60  # 5 minutes in seconds
-    max_interval = 8*60  # 8 minutes in seconds
+def schedule_random_interval(practitioner):
+    min_interval = 7*60  # 7min
+    max_interval = 12*60  # 12min
     random_interval = random.randint(min_interval, max_interval)
     current_time = datetime.now().strftime("%d.%m.%Y - %Hh%Mm%Ss")
 
@@ -59,26 +59,26 @@ def schedule_random_interval(practicien):
     highlight_violet = "\033[48;5;93m\033[97m"
 
     print(
-        f"\n{highlight_magenta} {practicien['name']} {reset}{highlight_violet} {current_time} {reset}{bold} Next check scheduled in {random_interval // 60} minutes and {random_interval % 60} seconds.{reset}")
-    schedule.clear()  # Clear the current schedule
+        f"\n{highlight_magenta} {practitioner['name']} {reset}{highlight_violet} {current_time} {reset}{bold} Next check scheduled in {random_interval // 60} minutes and {random_interval % 60} seconds.{reset}")
+    schedule.clear() 
     schedule.every(random_interval).seconds.do(
         check_availabilities,
-        practicien
+        practitioner
     )
 
 
 def generate_daily_schedule():
-    # Between 7:25 and 7:35 in minutes
+    # Between 7:25 and 7:35
     start_time = random.randint(7 * 60 + 25, 7 * 60 + 35)
-    # Between 21:25 and 21:35 in minutes
+    # Between 21:25 and 21:35
     end_time = random.randint(21 * 60 + 25, 23 * 60 + 25)
     start_hour, start_minute = divmod(start_time, 60)
     end_hour, end_minute = divmod(end_time, 60)
     return (start_hour, start_minute), (end_hour, end_minute)
 
 
-def run_scheduler(practicien):
-    schedule_random_interval(practicien)  # Schedule the first check
+def run_scheduler(practitioner):
+    schedule_random_interval(practitioner)
 
     # Planifier l'envoi du message quotidien à midi
     schedule.every().day.at("12:00").do(utils.send_daily_message)
@@ -99,13 +99,13 @@ def run_scheduler(practicien):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Missing practicien name: python doctoscript.py <practicien_name>")
+        print("Missing practitioner name: python doctoscript.py <practitioner_name>")
         sys.exit(1)
 
-    practicien_name = sys.argv[1]
-    if not hasattr(config, practicien_name):
-        print(f"Practicien '{practicien_name}' non trouvé dans config.py")
+    practitioner_name = sys.argv[1]
+    if not hasattr(config, practitioner_name):
+        print(f"praticien '{practitioner_name}' non trouvé dans config.py")
         sys.exit(1)
 
-    practicien = getattr(config, practicien_name)
-    run_scheduler(practicien)
+    practitioner = getattr(config, practitioner_name)
+    run_scheduler(practitioner)
