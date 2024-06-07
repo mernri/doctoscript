@@ -1,6 +1,6 @@
 # DoctoScript
 
-DoctoScript is a simple ython script designed to check appointment availability for a practitioner on Doctolib and send a WhatsApp notification when a slot becomes available. It regularly checks for open appointments and alerts the user if any are found.
+DoctoScript is a simple python script designed to check appointment availability for a practitioner on Doctolib and send a WhatsApp notification when a slot becomes available. It regularly checks for open appointments and alerts the user if any are found.
 
 ## Setup
 
