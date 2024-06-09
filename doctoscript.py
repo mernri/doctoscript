@@ -16,16 +16,19 @@ def check_availabilities(practitioner):
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+        "Accept": "application/json",
         "Accept-Language": "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
         "Connection": "keep-alive",
     }
+
     response = requests.get(url, params=params, headers=headers)
 
     if response.status_code == 200:
         data = response.json()
-        if "next_slot" in data:
-            next_slot = utils.format_datetime(data["next_slot"])
+        if "next_slot" in data or "total" in data and data["total"] > 0:
+            next_slot = utils.format_datetime(
+                data["next_slot"]) if "next_slot" in data else "Inconnu"
             message = (
                 f"Il y a au moins un rendez-vous libre pour *{practitioner['name']}*.\n\n"
                 f"Prochain créneau disponible : \n{next_slot}.\n\n"
@@ -60,7 +63,7 @@ def schedule_random_interval(practitioner):
 
     print(
         f"\n{highlight_magenta} {practitioner['name']} {reset}{highlight_violet} {current_time} {reset}{bold} Next check scheduled in {random_interval // 60} minutes and {random_interval % 60} seconds.{reset}")
-    schedule.clear() 
+    schedule.clear()
     schedule.every(random_interval).seconds.do(
         check_availabilities,
         practitioner
@@ -70,7 +73,7 @@ def schedule_random_interval(practitioner):
 def generate_daily_schedule():
     # Between 7:25 and 7:35
     start_time = random.randint(7 * 60 + 25, 7 * 60 + 35)
-    # Between 21:25 and 21:35
+    # Between 21:25 and 23:25
     end_time = random.randint(21 * 60 + 25, 23 * 60 + 25)
     start_hour, start_minute = divmod(start_time, 60)
     end_hour, end_minute = divmod(end_time, 60)
